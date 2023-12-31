@@ -22,12 +22,14 @@
 package com.kaytat.simpleprotocolplayer;
 
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -47,6 +49,12 @@ import android.widget.Spinner;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.MediaMetadata;
+import androidx.media3.session.MediaController;
+import androidx.media3.session.SessionToken;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.commons.validator.routines.DomainValidator;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.json.JSONArray;
@@ -125,9 +133,18 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
       if (hasFocus && ipAddrText.getAdapter() != null) {
         audioPortText.showDropDown();
       }
-
     });
+
+    SessionToken sessionToken =
+        new SessionToken(this, new ComponentName(this, BackgroundMusicService.class));
+    controllerFuture =
+        new MediaController.Builder(this, sessionToken).buildAsync();
+    controllerFuture.addListener(() -> {
+      // MediaController is available here with controllerFuture.get()
+    }, MoreExecutors.directExecutor());
   }
+
+  ListenableFuture<MediaController> controllerFuture;
 
   /**
    * The two different approaches here is an attempt to support both an old
@@ -475,13 +492,34 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
 
       // Save current settings
       savePrefs();
-      startService(i);
+      // startService(i);
+
+      try {
+        MediaItem mediaItem =
+            new MediaItem.Builder()
+                .setMediaId("media-1")
+                .setUri("https://storage.googleapis.com/exoplayer-test-media-1/gen-3/screens/dash-vod-single-segment/video-avc-baseline-480.mp4")
+                .setMediaMetadata(
+                    new MediaMetadata.Builder()
+                        .setArtist("David Bowie")
+                        .setTitle("Heroes")
+                        .setArtworkUri(Uri.parse(
+                            "https://cdn.pixabay.com/photo/2014/10/09/13/14/video-481821_960_720.png"))
+                        .build())
+                .build();
+
+        controllerFuture.get().setMediaItem(mediaItem);
+        controllerFuture.get().prepare();
+        controllerFuture.get().play();
+      } catch (Exception ex) {
+        Log.e(TAG, "exception" + ex);
+      }
     } else if (target == stopButton) {
       hideKb();
 
-      Intent i = new Intent(MusicService.ACTION_STOP);
-      i.setPackage(getPackageName());
-      startService(i);
+//      Intent i = new Intent(MusicService.ACTION_STOP);
+//      i.setPackage(getPackageName());
+//      startService(i);
     }
   }
 

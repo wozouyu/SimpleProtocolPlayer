@@ -277,6 +277,7 @@ public class MusicService extends Service implements MusicFocusable {
   void setUpAsForeground(String text) {
     createNotificationChannel();
 
+    /*
     PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0,
         new Intent(getApplicationContext(), MainActivity.class),
         PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -285,7 +286,7 @@ public class MusicService extends Service implements MusicFocusable {
         NOTIFICATION_CHANNEL_ID).setSmallIcon(R.drawable.ic_stat_playing)
         .setOngoing(true).setContentTitle(NOTIFICATION_CHANNEL_ID)
         .setContentText(text).setContentIntent(pi).build();
-    startForeground(NOTIFICATION_ID, mNotification);
+    startForeground(NOTIFICATION_ID, mNotification);*/
   }
 
   private void createNotificationChannel() {
